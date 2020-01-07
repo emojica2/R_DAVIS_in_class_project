@@ -6,8 +6,11 @@ Please fill in this markdown document, save your edits, and push your changes to
 
 
 What's your name? 
+Lizzy Mojica
 
 What do you study (or hope to study)?
+Environmental Epigenetics!
 
 What's one interesting fact about you? 
+I have two cats
 
