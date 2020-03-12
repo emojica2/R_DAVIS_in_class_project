@@ -1,0 +1,113 @@
+---
+title: "R-DAVIS Final Assignment"
+author: "Elizabeth Mojica"
+date: "3/11/2020"
+output: html_document
+---
+
+
+
+Loading three dataframes into R
+
+
+```r
+flights <- read_csv("data/raw_data/nyc_13_flights.csv") %>% 
+  select(-c(X18, X19))
+planes <- read_csv("data/raw_data/nyc_13_planes.csv")
+weather <- read_csv("data/raw_data/nyc_13_weather.csv")
+
+flights$sched_dep_time <- as.numeric(flights$sched_dep_time)
+```
+
+Part 1: Plot the departure delay of flights against the precipitation, and include a simple regression line as part of the plot. Hint: there is a geom_ that will plot a simple y ~ x regression line for you, but you might have to use an argument to make sure it’s a regular linear model.
+
+
+```r
+flights$time_hour <- paste0(flights$year, sep = "-", flights$month, sep = "-", flights$day, sep = " ", flights$hour)
+flights$time_hour <- ymd_h(flights$time_hour)
+
+flights$dep_delay <- flights$dep_time - flights$sched_dep_time
+
+flights_weather <- left_join(flights, weather, by = c("time_hour", "origin"))
+
+flights_weather %>% 
+  filter(complete.cases(.)) %>% 
+  ggplot(mapping = aes(x = precip, y = dep_delay)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+<img src="R_DAVIS_Final_Assignment_files/figure-html/unnamed-chunk-3-1.png" width="672" />
+
+Part 2: Create a figure that has date on the x axis and mean departure delay on the y axis. Plot only months September through December. Somehow distinguish between airline carriers (the method is up to you). Hint: You have the columns sched_dep_time (scheduled departure time) and dep_time (the actual departure time). Calculate the difference for the departure delay.
+
+
+```r
+flights$date <- paste0(flights$year, sep = "-", flights$month, sep = "-", flights$day)
+flights$date <- ymd(flights$date)
+
+flights$dep_delay <- flights$dep_time - flights$sched_dep_time
+
+flights_planes <- left_join(flights, planes, by = c("tailnum"))
+flights_planes <- flights_planes %>% 
+  filter(complete.cases(.)) %>% 
+  filter(month == 9 | month == 10 | month == 11 | month == 12)
+
+flights_planes %>% 
+  ggplot(mapping = aes(x = date, y = dep_delay, color = carrier)) +
+  geom_point()
+```
+
+<img src="R_DAVIS_Final_Assignment_files/figure-html/unnamed-chunk-4-1.png" width="672" />
+
+
+Part 3: Create a table with these columns: date (year, month and day), mean_temp_EWR, mean_temp_JFK, mean_temp_LGA. Notice the names share a prefix, wonder if there’s an argument somewhere for that… Also, it’s a lot of data, so think about whether you want a really long table or an interactive one you can click through (check out the RMarkdown lesson if you need help).
+
+
+```r
+flights_weather_planes <- left_join(flights_weather, planes, by = "tailnum")
+flights_weather_planes$date <- paste0(flights_weather_planes$year.x, sep = "-", flights_weather_planes$month.x, sep = "-", flights_weather_planes$day.x)
+flights_weather_planes$date <- ymd(flights_weather_planes$date)
+
+table_data <- flights_weather_planes %>% 
+  group_by(date, carrier) %>% 
+  mutate(mean_temp = mean(temp))
+  
+DT::datatable(table_data)
+```
+
+```
+## Warning in instance$preRenderHook(instance): It seems your data is too big
+## for client-side DataTables. You may consider server-side processing: https://
+## rstudio.github.io/DT/server.html
+```
+
+preservec305a2c751e4ea75
+
+
+Part 4: Make a combination violin/scatterplot showing departure delay by manufacturer, and add a facet for whether or not it’s raining. Hint: you’ll have to make a new column to classify “raining” or “not raining”, the exact method is up to you.
+
+
+```r
+flights_weather_planes <- flights_weather_planes %>% 
+  mutate(raining = precip > 0) %>% 
+  filter(complete.cases(.))
+
+flights_weather_planes %>% 
+  ggplot(mapping = aes(x = manufacturer, y = dep_delay)) +
+  geom_violin() +
+  geom_jitter() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  facet_wrap("raining")
+```
+
+<img src="R_DAVIS_Final_Assignment_files/figure-html/unnamed-chunk-6-1.png" width="672" />
+
+
+Part 5: Insert an image of the coolest plane in the planes dataset (the choice is yours). Add a link to a webpage with some information on this super cool plane. Bonus points if your image is a GIF (not really bonus points but we’ll like it).
+
+Enjoy this picture and website on the plane model ERJ145XR!
+
+![ERJ145XR](images/Embraer_ERJ-145_KomiAviaTrans_Pulkovo.gif)
+
+[ERJ145XR](https://www.embraercommercialaviation.com/commercial-jets/erj145xr/)

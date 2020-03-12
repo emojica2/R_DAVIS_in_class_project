@@ -32,6 +32,7 @@ flights$dep_delay <- flights$dep_time - flights$sched_dep_time
 flights_weather <- left_join(flights, weather, by = c("time_hour", "origin"))
 
 flights_weather %>% 
+  filter(complete.cases(.)) %>% 
   ggplot(mapping = aes(x = precip, y = dep_delay)) +
   geom_point() +
   geom_smooth(method = "lm")
