@@ -67,8 +67,8 @@ flights_weather_planes$date <- ymd(flights_weather_planes$date)
 
 table_data <- flights_weather_planes %>% 
   group_by(date, carrier) %>% 
-  mutate(mean_temp = mean(temp))
-  
+  summarize(mean_temp = mean(temp))
+
 DT::datatable(table_data)
 ```
 
